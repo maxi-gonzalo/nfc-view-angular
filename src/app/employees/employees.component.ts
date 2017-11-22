@@ -1,0 +1,68 @@
+import { Component, OnInit } from '@angular/core';
+import { ApiService } from '../shared/api.service';
+import { Employee, Status } from '../shared/model/employee';
+import { getDisplayValue, DisplayValue } from '../employees/employee/d';
+import { FilterType } from './filter';
+import { StatusSelect } from '../employees/employee/d';
+
+import '../../style/app.scss';
+import '../../style/custom.scss';
+
+@Component({
+  selector: 'my-employess',
+  templateUrl: './employees.component.html',
+  styleUrls: ['./employees.component.scss']
+})
+
+export class EmployeesComponent implements OnInit {
+  private data: Employee[] = [];
+  private filterArgs: FilterType = { txt: '' };
+  private allStatus: StatusSelect[] = this.initAllStatus();
+  private displayStatus = 'active';
+
+  constructor(private api: ApiService) {}
+
+  ngOnInit() {
+    console.log(this.filterArgs, this.allStatus, this.getDisplayStatus, this.displayStatus);
+    this.getEmployees();
+  }
+
+  getEmployees() {
+    if (this.displayStatus !== 'Todos') {
+      this.api.getEmployeesByStatus(this.displayStatus).subscribe((data: Employee[]) => {
+        this.data = data;
+      });
+    } else {
+      this.api.getEmployees().subscribe((data: Employee[]) => {
+        this.data = data;
+      });
+    }
+  }
+
+  onFinish = (employee: Employee) => {
+    this.data.push(employee);
+  };
+
+  onRemove = (index: number) => {
+    this.api.removeEmploye(this.data[index]).subscribe(() => {
+      this.data.splice(index, 1);
+    });
+  }
+
+  onChange() {
+    this.getEmployees();
+  }
+
+  getDisplayStatus(status: Status): DisplayValue {
+    return getDisplayValue(status);
+  }
+
+  private initAllStatus(): StatusSelect[] {
+    return [
+      { status: 'Todos', displayValue: 'Todos' },
+      { status: 'active', displayValue: 'Activo' },
+      { status: 'inactive', displayValue: 'Inactivo' },
+      { status: 'suspended', displayValue: 'Suspendido' }
+    ];
+  }
+}
